@@ -114,8 +114,8 @@ export default function DashboardPage() {
           <div className="rounded-lg border border-red-200 bg-red-50 p-4">
             <p className="text-sm text-red-600">{error}</p>
             <p className="mt-2 text-xs text-red-500">
-              Go to your Appwrite Console -> Databases to find your Database ID
-              and Collection IDs, then update the .env file.
+              Go to your Appwrite Console &gt; Databases to find your Database
+              ID and Collection IDs, then update the .env file.
             </p>
           </div>
         </div>
