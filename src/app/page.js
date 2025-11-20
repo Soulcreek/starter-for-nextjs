@@ -4,16 +4,19 @@ import "./app.css";
 import "@appwrite.io/pink-icons";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { client } from "@/lib/appwrite";
+import { useAuth } from "@/contexts/AuthContext";
 import { AppwriteException } from "appwrite";
 import NextjsLogo from "../static/nextjs-icon.svg";
 import AppwriteLogo from "../static/appwrite-icon.svg";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   const [detailHeight, setDetailHeight] = useState(55);
   const [logs, setLogs] = useState([]);
   const [status, setStatus] = useState("idle");
   const [showLogs, setShowLogs] = useState(false);
+  const { user, logout } = useAuth();
 
   const detailsRef = useRef(null);
 
@@ -54,15 +57,22 @@ export default function Home() {
       setLogs((prevLogs) => [log, ...prevLogs]);
       setStatus("success");
     } catch (err) {
+      console.error("Ping error:", err);
+      let errorMessage = err instanceof AppwriteException
+        ? err.message
+        : "Something went wrong";
+      
+      // Provide helpful hint for connection errors
+      if (err.message?.includes("fetch") || err.message?.includes("network") || err.name === "TypeError") {
+        errorMessage = "Connection failed. Make sure to add 'localhost' as a platform in Appwrite Console -> Settings -> Platforms. See TROUBLESHOOTING.md for details.";
+      }
+      
       const log = {
         date: new Date(),
         method: "GET",
         path: "/v1/ping",
         status: err instanceof AppwriteException ? err.code : 500,
-        response:
-          err instanceof AppwriteException
-            ? err.message
-            : "Something went wrong",
+        response: errorMessage,
       };
       setLogs((prevLogs) => [log, ...prevLogs]);
       setStatus("error");
@@ -75,6 +85,51 @@ export default function Home() {
       className="checker-background flex flex-col items-center p-5"
       style={{ marginBottom: `${detailHeight}px` }}
     >
+      {/* Header Navigation */}
+      <div className="w-full max-w-[80em] mb-8">
+        <div className="flex items-center justify-between rounded-lg border border-[#EBEBEB] bg-white px-6 py-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Image
+              alt={"Appwrite logo"}
+              src={AppwriteLogo}
+              width={32}
+              height={32}
+            />
+            <span className="text-lg font-semibold text-[#19191C]">
+              Appwrite + Next.js
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <span className="text-sm text-[#56565C]">
+                  Welcome, {user.name}
+                </span>
+                <Link
+                  href="/dashboard"
+                  className="rounded-md bg-[#FD366E] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E02D5E]"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => logout()}
+                  className="rounded-md border border-[#EBEBEB] bg-white px-4 py-2 text-sm font-medium text-[#19191C] transition-colors hover:bg-[#FAFAFB]"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-md bg-[#FD366E] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E02D5E]"
+              >
+                Login
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="mt-25 flex w-full max-w-[40em] items-center justify-center lg:mt-34">
         <div className="rounded-[25%] border border-[#19191C0A] bg-[#F9F9FA] p-3 shadow-[0px_9.36px_9.36px_0px_hsla(0,0%,0%,0.04)]">
           <div className="rounded-[25%] border border-[#FAFAFB] bg-white p-5 shadow-[0px_2px_12px_0px_hsla(0,0%,0%,0.03)] lg:p-9">
